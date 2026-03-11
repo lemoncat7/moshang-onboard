@@ -69,7 +69,7 @@ function serveDashboard(req, res) {
   serveFile(DASHBOARD_PATH, res);
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
