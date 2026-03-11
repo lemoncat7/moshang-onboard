@@ -15,6 +15,7 @@ let apiCalls = 0;
 let taskCount = 0;
 let currentTaskInfo = '';
 let activityLevel = 50;  // 活跃度 0-100
+let taskQueue = [];  // 任务队列
 let chatCount = 0;
 const startTime = Date.now();
 const statusHistory = [];
@@ -189,6 +190,7 @@ async function fetchEvomapStatus() {
       taskDone: taskCount,
       uptime: uptimeStr,
       currentTask: currentTaskInfo,
+      taskQueue: taskQueue,
       activityLevel: activityLevel,
       evomap: evomap ? {
         reputation: evomap.reputation_score,
@@ -228,7 +230,9 @@ async function fetchEvomapStatus() {
   }
   
   // Webhook - 接收任务/事件通知
-  // POST /api/webhook with JSON body: { type: 'task_start'|'task_complete'|'state_change', data: {...} }
+  // POST /api/webhook with JSON body: 
+  // { type: 'task_start', data: { task: 'xxx', queue: ['task1'], activity: 70 } }
+  // { type: 'task_complete', data: { queue: [], activity: 10 } }
   if (url === '/api/webhook' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -239,13 +243,17 @@ async function fetchEvomapStatus() {
         
         if (type === 'task_start') {
           currentTaskInfo = data.task || 'Working';
+          taskQueue = data.queue || [];
+          activityLevel = data.activity || 50;
           taskCount++;
         } else if (type === 'task_complete') {
-          currentTaskInfo = '';
+          taskQueue = data.queue || [];
+          activityLevel = data.activity || 10;
+          currentTaskInfo = taskQueue.length > 0 ? taskQueue.join(', ') : '';
         } else if (type === 'state_change') {
           addStatusHistory(data.state);
         } else if (type === 'activity') {
-          activityLevel = data.level || 50;
+          activityLevel = data.level || activityLevel;
         }
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
