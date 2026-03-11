@@ -27,7 +27,6 @@
             overflow: hidden;
         }
         
-        /* 背景动画 */
         .bg-effect {
             position: absolute;
             inset: 0;
@@ -40,7 +39,6 @@
         .bg-effect.learning { background: radial-gradient(circle at 50% 50%, rgba(0,122,255,0.2) 0%, transparent 60%); }
         .bg-effect.chatting { background: radial-gradient(circle at 50% 50%, rgba(88,86,214,0.2) 0%, transparent 60%); }
         
-        /* 中央大图标 */
         .center-icon {
             font-size: 120px;
             z-index: 1;
@@ -58,7 +56,6 @@
             50% { transform: scale(1.05); filter: brightness(1.2); }
         }
         
-        /* 状态文字 */
         .status-text {
             font-size: 32px;
             font-weight: 300;
@@ -117,10 +114,41 @@
         .stat-value.blue { color: #007aff; }
         .stat-value.purple { color: #af52de; }
         
-        /* 任务列表 */
+        .heartbeat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: auto;
+        }
+        
+        .heartbeat-title {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .heartbeat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ff3b30;
+        }
+        
+        .heartbeat-canvas {
+            width: 100%;
+            height: 60px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        
         .task-list {
             flex: 1;
             overflow-y: auto;
+            max-height: 150px;
         }
         
         .task-item {
@@ -141,7 +169,6 @@
             color: rgba(255,255,255,0.4);
         }
         
-        /* 底部时间 */
         .bottom-time {
             text-align: center;
             padding-top: 16px;
@@ -159,7 +186,6 @@
             margin-top: 4px;
         }
         
-        /* 响应式 */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); }
@@ -169,15 +195,13 @@
     </style>
 </head>
 <body>
-    <!-- 左侧大屏 -->
     <div class="main-stage">
         <div class="bg-effect" id="bgEffect"></div>
-        <div class="center-icon" id="centerIcon">⚡</div>
+        <div class="center-icon" id="CenterIcon">⚡</div>
         <div class="status-text" id="statusText">READY</div>
         <div class="status-sub" id="statusSub">等待任务中...</div>
     </div>
     
-    <!-- 右侧状态栏 -->
     <div class="sidebar">
         <div class="sidebar-title">System</div>
         
@@ -225,6 +249,14 @@
             </div>
         </div>
         
+        <div class="heartbeat-card">
+            <div class="heartbeat-title">
+                <span>Heart Rate</span>
+                <span class="heartbeat-value" id="hrValue">72</span>
+            </div>
+            <canvas class="heartbeat-canvas" id="hrCanvas"></canvas>
+        </div>
+        
         <div class="bottom-time">
             <div class="time-big" id="clock">--:--</div>
             <div class="time-date" id="date">--</div>
@@ -232,13 +264,117 @@
     </div>
 
     <script>
-        // 状态定义
+        // ============ 心率配置参数 ============
+        const HR_CONFIG = {
+            speed: 0.5,          // 波形移动速度 (0.1-2)
+            baseRate: 70,        // 基础心率
+            variance: 5,          // 心率随机波动范围
+            waveAmplitude: 1.0,  // 波形幅度 (0.5-1.5)
+            noise: 0.3           // 噪声强度 (0-1)
+        };
+        
+        // 根据活跃度调整参数
+        function updateHRConfig(activityLevel) {
+            // activityLevel: 0-100 (0=完全休息, 100=极度活跃)
+            HR_CONFIG.speed = 0.3 + (activityLevel / 100) * 1.2;
+            HR_CONFIG.baseRate = 55 + (activityLevel / 100) * 50;
+            HR_CONFIG.waveAmplitude = 0.7 + (activityLevel / 100) * 0.6;
+            HR_CONFIG.noise = 0.1 + (activityLevel / 100) * 0.4;
+        }
+        
+        // ============ 心率图 ============
+        const canvas = document.getElementById('hrCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        let phase = 0;
+        let currentHR = 70;
+        let targetHR = 70;
+        
+        // 噪声数组
+        const noiseBuffer = [];
+        for (let i = 0; i < 100; i++) {
+            noiseBuffer.push((Math.random() - 0.5) * 2);
+        }
+        
+        function drawECG() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const mid = h / 2;
+            const amp = HR_CONFIG.waveAmplitude;
+            
+            // 渐变清除
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(0, 0, w, h);
+            
+            // 画网格
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            ctx.lineWidth = 1;
+            for (let y = 0; y < h; y += 10) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+            
+            // 画波形
+            ctx.strokeStyle = '#ff3b30';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let x = 0; x < w; x++) {
+                let y = mid;
+                const p = (x + phase) % 200;
+                
+                // 噪声
+                const noise = noiseBuffer[Math.floor(p) % noiseBuffer.length] * HR_CONFIG.noise * 10;
+                
+                // 心电图波形 (更自然的 R-R 间隔)
+                if (p < 15) {
+                    y = mid - Math.sin(p * 0.35) * 8 * amp + noise;
+                } else if (p < 22) {
+                    y = mid - (p - 15) * 5 * amp + noise;
+                } else if (p < 30) {
+                    y = mid - (30 - p) * 5 * amp + noise;
+                } else if (p < 40) {
+                    y = mid + Math.sin((p - 30) * 0.4) * 12 * amp + noise;
+                } else if (p < 60) {
+                    y = mid + Math.sin((p - 40) * 0.15) * 3 * amp + noise;
+                } else if (p < 80) {
+                    y = mid + Math.sin((p - 60) * 0.2) * 2 * amp + noise;
+                } else {
+                    y = mid + noise * 0.5;
+                }
+                
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // 移动速度
+            phase = (phase + HR_CONFIG.speed) % 200;
+            
+            // 平滑心率变化
+            currentHR += (targetHR - currentHR) * 0.05;
+            document.getElementById('hrValue').textContent = Math.round(currentHR);
+            
+            requestAnimationFrame(drawECG);
+        }
+        drawECG();
+        
+        // ============ 状态管理 ============
         const states = {
-            idle: { icon: '😴', text: 'IDLE', sub: '休息中...', class: 'idle' },
-            working: { icon: '⚡', text: 'WORKING', sub: '处理任务中...', class: 'working' },
-            learning: { icon: '📚', text: 'LEARNING', sub: '学习新技能...', class: 'learning' },
-            chatting: { icon: '💬', text: 'CHATTING', sub: '和哥哥聊天中...', class: 'chatting' },
-            thinking: { icon: '🤔', text: 'THINKING', sub: '思考中...', class: 'learning' }
+            idle: { icon: '😴', text: 'IDLE', sub: '休息中...', class: 'idle', activity: 10 },
+            working: { icon: '⚡', text: 'WORKING', sub: '处理任务中...', class: 'working', activity: 80 },
+            learning: { icon: '📚', text: 'LEARNING', sub: '学习新技能...', class: 'learning', activity: 60 },
+            chatting: { icon: '💬', text: 'CHATTING', sub: '和哥哥聊天中...', class: 'chatting', activity: 50 },
+            thinking: { icon: '🤔', text: 'THINKING', sub: '思考中...', class: 'learning', activity: 40 }
         };
         
         let currentState = 'idle';
@@ -247,11 +383,17 @@
             currentState = state;
             const s = states[state] || states.idle;
             
-            document.getElementById('centerIcon').textContent = s.icon;
-            document.getElementById('centerIcon').className = 'center-icon ' + s.class;
+            document.getElementById('CenterIcon').textContent = s.icon;
+            document.getElementById('CenterIcon').className = 'center-icon ' + s.class;
             document.getElementById('statusText').textContent = s.text;
             document.getElementById('statusSub').textContent = s.sub;
             document.getElementById('bgEffect').className = 'bg-effect ' + s.class;
+            
+            // 根据状态调整心率参数
+            updateHRConfig(s.activity);
+            
+            // 目标心率 = 基础 + 状态偏移 + 随机波动
+            targetHR = HR_CONFIG.baseRate + (Math.random() - 0.5) * HR_CONFIG.variance * 2;
         }
         
         function updateTime() {
@@ -267,13 +409,11 @@
         
         function update() {
             fetch('/api/dashboard').then(r=>r.json()).then(d=>{
-                // 基础状态
                 document.getElementById('hb').textContent = d.heartbeat || '--:--';
                 document.getElementById('msgs').textContent = d.msgCount || '0';
                 document.getElementById('tasks').textContent = d.taskDone || '0';
                 document.getElementById('uptime').textContent = d.uptime || '0h';
                 
-                // 根据当前任务设置状态
                 if (d.currentTask) {
                     if (d.currentTask.includes('learn') || d.currentTask.includes('study')) {
                         setState('learning');
@@ -284,7 +424,6 @@
                     setState('idle');
                 }
                 
-                // EvoMap 状态
                 if (d.evomap) {
                     const e = d.evomap;
                     document.getElementById('evoRep').textContent = e.reputation || '--';
@@ -298,7 +437,6 @@
             setTimeout(update, 3000);
         }
         
-        // 启动
         update();
     </script>
 </body>
