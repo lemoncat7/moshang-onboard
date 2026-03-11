@@ -8,221 +8,213 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+            background: #000;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
             color: #fff;
         }
         
-        /* 中心圆 */
-        .center-circle {
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle at 30% 30%, #2a2a2a, #000);
-            border-radius: 50%;
+        .card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        /* 顶部头像 */
+        .profile {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            box-shadow: 
-                0 0 80px rgba(255,200,100,0.15),
-                inset 0 0 40px rgba(0,0,0,0.8);
-            border: 2px solid #333;
-            position: relative;
-            margin-bottom: 40px;
+            gap: 16px;
         }
         
         .avatar {
-            font-size: 45px;
-            margin-bottom: 4px;
-            animation: pulse 2s ease-in-out infinite;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff9500, #ff3b30);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
         }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
+        .profile-info {
+            flex: 1;
         }
         
         .name {
-            font-size: 16px;
+            font-size: 24px;
             font-weight: 600;
-            color: #ffc864;
         }
         
         .status {
-            font-size: 11px;
-            margin-top: 4px;
-        }
-        
-        .status.online { color: #5cdb95; }
-        .status.idle { color: #feca57; }
-        
-        /* 浮窗环绕 */
-        .float-item {
-            position: absolute;
-            background: rgba(255,255,255,0.06);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 10px 14px;
-            min-width: 72px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .float-item:hover {
-            background: rgba(255,255,255,0.12);
-            transform: scale(1.05);
-        }
-        
-        .float-label {
-            font-size: 8px;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .float-value {
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            margin-top: 3px;
-        }
-        
-        .float-value.highlight { color: #ffc864; }
-        .float-value.green { color: #5cdb95; }
-        .float-value.pink { color: #ff6b6b; }
-        
-        /* 环绕定位 */
-        .f1 { top: -30px; left: 50%; transform: translateX(-50%); }
-        .f2 { top: 5%; right: -70px; }
-        .f3 { bottom: 5%; right: -70px; }
-        .f4 { bottom: -30px; left: 50%; transform: translateX(-50%); }
-        .f5 { bottom: 5%; left: -70px; }
-        .f6 { top: 5%; left: -70px; }
-        
-        /* 底部信息栏 */
-        .bottom-bar {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 400px;
-        }
-        
-        .info-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 12px 16px;
-            text-align: center;
-            min-width: 90px;
-        }
-        
-        .info-label {
-            font-size: 9px;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .info-value {
             font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-dot.online { background: #34c759; }
+        .status-dot.idle { background: #ff9f0a; }
+        
+        /* 网格布局 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .grid-item {
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .grid-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .grid-value {
+            font-size: 22px;
             font-weight: 600;
-            color: #fff;
             margin-top: 4px;
         }
         
-        /* 主题切换 */
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.1);
-            border: none;
-            border-radius: 20px;
-            padding: 8px 16px;
-            color: #fff;
-            cursor: pointer;
+        .grid-value.orange { color: #ff9500; }
+        .grid-value.green { color: #34c759; }
+        .grid-value.red { color: #ff3b30; }
+        .grid-value.blue { color: #007aff; }
+        
+        /* 任务卡片 */
+        .task-card {
+            background: linear-gradient(135deg, rgba(255,149,0,0.15), rgba(255,59,48,0.15));
+        }
+        
+        .task-title {
             font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+        
+        .task-content {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .task-content.idle {
+            color: #34c759;
+        }
+        
+        .task-content.working {
+            color: #ff9f0a;
+        }
+        
+        /* EvoMap 状态 */
+        .evomap-card {
+            background: linear-gradient(135deg, rgba(0,122,255,0.15), rgba(88,86,214,0.15));
+        }
+        
+        .evo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .evo-item {
+            text-align: center;
+        }
+        
+        .evo-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .evo-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-    
-    <div class="center-circle">
+    <!-- 头像卡片 -->
+    <div class="card profile">
         <div class="avatar">⚡</div>
-        <div class="name">MoShang</div>
-        <div class="status" id="status">Idle</div>
-        
-        <div class="float-item f1">
-            <div class="float-label">Heartbeat</div>
-            <div class="float-value" id="hb">--:--</div>
-        </div>
-        
-        <div class="float-item f2">
-            <div class="float-label">Messages</div>
-            <div class="float-value pink" id="msgs">0</div>
-        </div>
-        
-        <div class="float-item f3">
-            <div class="float-label">Tasks</div>
-            <div class="float-value green" id="tasks">0</div>
-        </div>
-        
-        <div class="float-item f4">
-            <div class="float-label">Uptime</div>
-            <div class="float-value" id="uptime">0h</div>
-        </div>
-        
-        <div class="float-item f5">
-            <div class="float-label">Skills</div>
-            <div class="float-value highlight">6</div>
-        </div>
-        
-        <div class="float-item f6">
-            <div class="float-label">EvoMap</div>
-            <div class="float-value" id="evomap">--</div>
+        <div class="profile-info">
+            <div class="name">MoShang</div>
+            <div class="status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Idle</span>
+            </div>
         </div>
     </div>
     
-    <div class="bottom-bar">
-        <div class="info-card">
-            <div class="info-label">Reputation</div>
-            <div class="info-value" id="evoRep">--</div>
+    <!-- 状态网格 -->
+    <div class="grid">
+        <div class="grid-item">
+            <div class="grid-label">Heartbeat</div>
+            <div class="grid-value orange" id="hb">--:--</div>
         </div>
-        <div class="info-card">
-            <div class="info-label">Published</div>
-            <div class="info-value" id="evoPub">--</div>
+        <div class="grid-item">
+            <div class="grid-label">Messages</div>
+            <div class="grid-value blue" id="msgs">0</div>
         </div>
-        <div class="info-card">
-            <div class="info-label">Promoted</div>
-            <div class="info-value" id="evoPro">--</div>
+        <div class="grid-item">
+            <div class="grid-label">Tasks</div>
+            <div class="grid-value green" id="tasks">0</div>
         </div>
-        <div class="info-card">
-            <div class="info-label">Status</div>
-            <div class="info-value" id="evoStatus">--</div>
+        <div class="grid-item">
+            <div class="grid-label">Uptime</div>
+            <div class="grid-value" id="uptime">0h</div>
+        </div>
+    </div>
+    
+    <!-- 当前任务 -->
+    <div class="card task-card">
+        <div class="task-title">Current Task</div>
+        <div class="task-content idle" id="task">Idle</div>
+    </div>
+    
+    <!-- EvoMap -->
+    <div class="card evomap-card">
+        <div class="task-title">EvoMap Status</div>
+        <div class="evo-grid">
+            <div class="evo-item">
+                <div class="evo-value orange" id="evoRep">--</div>
+                <div class="evo-label">Reputation</div>
+            </div>
+            <div class="evo-item">
+                <div class="evo-value" id="evoPub">--</div>
+                <div class="evo-label">Published</div>
+            </div>
+            <div class="evo-item">
+                <div class="evo-value green" id="evoPro">--</div>
+                <div class="evo-label">Promoted</div>
+            </div>
+            <div class="evo-item">
+                <div class="evo-value" id="evoOnline">--</div>
+                <div class="evo-label">Online</div>
+            </div>
         </div>
     </div>
 
     <script>
-        let theme = 'dark';
-        
-        function toggleTheme() {
-            theme = theme === 'dark' ? 'light' : 'dark';
-            document.body.style.background = theme === 'dark' 
-                ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-                : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
-            document.querySelector('.theme-toggle').textContent = theme === 'dark' ? '🌙' : '☀️';
-        }
-        
         function update() {
             fetch('/api/dashboard').then(r=>r.json()).then(d=>{
                 // 基础状态
@@ -233,13 +225,20 @@
                 
                 // 当前任务
                 const task = d.currentTask || '';
-                const statusEl = document.getElementById('status');
+                const taskEl = document.getElementById('task');
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
                 if (task) {
-                    statusEl.textContent = 'Working';
-                    statusEl.className = 'status online';
+                    taskEl.textContent = task;
+                    taskEl.className = 'task-content working';
+                    statusDot.className = 'status-dot online';
+                    statusText.textContent = 'Working';
                 } else {
-                    statusEl.textContent = 'Idle';
-                    statusEl.className = 'status idle';
+                    taskEl.textContent = 'Idle';
+                    taskEl.className = 'task-content idle';
+                    statusDot.className = 'status-dot idle';
+                    statusText.textContent = 'Idle';
                 }
                 
                 // EvoMap 状态
@@ -248,8 +247,7 @@
                     document.getElementById('evoRep').textContent = e.reputation || '--';
                     document.getElementById('evoPub').textContent = e.published || '0';
                     document.getElementById('evoPro').textContent = e.promoted || '0';
-                    document.getElementById('evoStatus').textContent = e.survival || '--';
-                    document.getElementById('evomap').textContent = e.online ? '🟢' : '⚪';
+                    document.getElementById('evoOnline').textContent = e.online ? '🟢' : '⚪';
                 }
             }).catch(()=>{});
             setTimeout(update, 5000);
