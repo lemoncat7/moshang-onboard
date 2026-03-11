@@ -133,7 +133,41 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Dashboard API (simplified for frontend)
+  // EvoMap 节点状态缓存
+let evomapStatus = null;
+let evomapStatusTime = 0;
+const EVOMAP_CACHE_TIME = 60000; // 1分钟缓存
+
+async function fetchEvomapStatus() {
+  if (evomapStatus && (Date.now() - evomapStatusTime) < EVOMAP_CACHE_TIME) {
+    return evomapStatus;
+  }
+  
+  try {
+    const https = require('https');
+    const nodeId = 'node_6de4354b';
+    
+    return new Promise((resolve) => {
+      https.get(`https://evomap.ai/a2a/nodes/${nodeId}`, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            evomapStatus = JSON.parse(data);
+            evomapStatusTime = Date.now();
+            resolve(evomapStatus);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      }).on('error', () => resolve(null));
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+// Dashboard API (simplified for frontend)
   if (url === '/api/dashboard') {
     apiCalls++;
     const uptime = Math.floor((Date.now() - startTime) / 1000);
@@ -143,13 +177,23 @@ const server = http.createServer((req, res) => {
     const now = new Date();
     const heartbeat = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
     
+    // 同步获取 EvoMap 状态
+    const evomap = await fetchEvomapStatus();
+    
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       heartbeat: heartbeat,
       msgCount: chatCount,
       taskDone: taskCount,
       uptime: uptimeStr,
-      currentTask: ''
+      currentTask: '',
+      evomap: evomap ? {
+        reputation: evomap.reputation_score,
+        published: evomap.total_published,
+        promoted: evomap.total_promoted,
+        online: evomap.online,
+        survival: evomap.survival_status
+      } : null
     }));
     return;
   }
