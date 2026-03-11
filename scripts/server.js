@@ -13,6 +13,8 @@ const cache = new Map();
 // 运行时状态
 let apiCalls = 0;
 let taskCount = 0;
+let currentTaskInfo = '';
+let activityLevel = 50;  // 活跃度 0-100
 let chatCount = 0;
 const startTime = Date.now();
 const statusHistory = [];
@@ -186,7 +188,8 @@ async function fetchEvomapStatus() {
       msgCount: chatCount,
       taskDone: taskCount,
       uptime: uptimeStr,
-      currentTask: '',
+      currentTask: currentTaskInfo,
+      activityLevel: activityLevel,
       evomap: evomap ? {
         reputation: evomap.reputation_score,
         published: evomap.total_published,
@@ -221,6 +224,37 @@ async function fetchEvomapStatus() {
     addStatusHistory(newStatus);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: newStatus, history: statusHistory.slice(-10) }));
+    return;
+  }
+  
+  // Webhook - 接收任务/事件通知
+  // POST /api/webhook with JSON body: { type: 'task_start'|'task_complete'|'state_change', data: {...} }
+  if (url === '/api/webhook' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const { type, data } = payload;
+        
+        if (type === 'task_start') {
+          currentTaskInfo = data.task || 'Working';
+          taskCount++;
+        } else if (type === 'task_complete') {
+          currentTaskInfo = '';
+        } else if (type === 'state_change') {
+          addStatusHistory(data.state);
+        } else if (type === 'activity') {
+          activityLevel = data.level || 50;
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ received: true, type }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      }
+    });
     return;
   }
   
